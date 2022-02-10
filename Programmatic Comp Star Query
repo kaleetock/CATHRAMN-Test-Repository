@@ -1,0 +1,40 @@
+def find_comps(coords, fov, maglimit):
+  data = {"format": "json", "fov": fov, "ra": float(coords.ra.degree), 
+          "dec": float(coords.dec.degree), "maglimit": maglimit }
+
+  url_values = urllib.parse.urlencode(data)
+  full_url = 'https://app.aavso.org/vsp/api/chart/' + '?' + url_values
+  respj = requests.get(full_url)
+  resj = respj.json()
+  list(resj)
+  print(resj)
+  CheckError = resj.get('errors','No Errors') 
+  if CheckError != 'No Errors':
+    print('Search Error')
+    return([])
+  else:
+    kval = resj.get('photometry')
+    CompStarList = []
+    for comp in kval:
+      compv = comp.get('bands')
+      for bandk in compv:
+        if bandk.get('band') == 'V':
+          Vmag = float(bandk.get('mag'))
+        if bandk.get('band') == 'B':
+          Bmag = float(bandk.get('mag'))
+      thisComp = {"Label": comp.get('label'), "AUID": comp.get('auid'), "RA": comp.get('ra'), 
+              "Dec": comp.get('dec'), "Vmag": Vmag, "Bmag": Bmag }
+
+      CompStarList.append(thisComp)
+      print(thisComp)
+    return(CompStarList)
+
+######################################################################
+
+import urllib.parse
+
+coords = SkyCoord("04h06m59.38s+60d55m14.6s")
+fov = 120      # Field of view in arcseconds
+maglimit = 16  # Do not display stars fainter than mag 16
+
+CompStarList = find_comps(coords, fov, maglimit)
